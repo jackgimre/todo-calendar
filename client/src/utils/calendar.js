@@ -5,7 +5,7 @@ export async function fetchCalendarData(calendarId = null) {
     if (!token) throw new Error("No auth token found");
 
     // Use calendarId if provided, else fetch the most recent calendar
-    const url = calendarId ? `${returnURL()}/api/calendar/${calendarId}` : `/api/calendar/`;
+    const url = calendarId != null || calendarId != undefined ? `${returnURL()}/api/calendar/${calendarId}` : `/api/calendar/`;
 
     const res = await fetch(url, {
         credentials: "include",
@@ -54,6 +54,21 @@ export async function fetchAllCalendarNames() {
     });
     if (!res.ok) {
         throw new Error("Failed to fetch calendar names");
+    }
+    const data = await res.json();
+    return data;
+}
+
+export async function fetchAllCalendarIds() {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${returnURL()}/api/calendar/all/ids`, {
+        credentials: "include",
+        headers: {
+        Authorization: `Bearer ${token}`,
+        },
+    });
+    if (!res.ok) {
+        throw new Error("Failed to fetch calendar ids");
     }
     const data = await res.json();
     return data;

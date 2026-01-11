@@ -55,6 +55,15 @@ router.get("/all/names", async (req, res) => {
   }
 });
 
+router.get("/all/ids", async (req, res) => {
+  try {
+    const calendars = await Calendar.find({}, { name: 1 }); // only return name
+    res.json(calendars);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // routes/calendar.js
 router.delete("/:id", Authenticator.authMiddleware, async (req, res) => {
   try {
