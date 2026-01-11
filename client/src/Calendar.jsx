@@ -162,7 +162,7 @@ const Calendar = ({ calendarId, setCalendarId }) => {
         nameError={nameError}
         setNameError={setNameError}
       />
-      <Navbar openModal={openModal} calendars={calendars} setPromptDeleteStatus={setPromptDeleteStatus} setDeletionId={setDeletionId} />
+      <Navbar openModal={openModal} calendars={calendars} setPromptDeleteStatus={setPromptDeleteStatus} setDeletionId={setDeletionId} username={user.username} />
       <Layout
         sidebarContent={
           <CalendarSidebar openModal={openModal} calendars={calendars} setPromptDeleteStatus={setPromptDeleteStatus} setDeletionId={setDeletionId}></CalendarSidebar>

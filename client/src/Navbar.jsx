@@ -3,7 +3,7 @@ import { useState } from "react";
 import useCurrentUser from "./hooks/useCurrentUser";
 import CalendarSidebar from "./components/CalendarSidebar";
 
-export default function Navbar({openModal, calendars, setPromptDeleteStatus, setDeletionId}) {
+export default function Navbar({ openModal, calendars, setPromptDeleteStatus, setDeletionId, username }) {
   const { user, loading, error } = useCurrentUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -31,8 +31,7 @@ export default function Navbar({openModal, calendars, setPromptDeleteStatus, set
 
         {/* Desktop menu (hidden on mobile) */}
         <div className="hidden md:flex space-x-4">
-          <Link to="/" className="hover:text-gray-300">Home</Link>
-          <Link to="/logout" className="hover:text-gray-300">Logout</Link>
+          <b>{username}</b>
         </div>
       </nav>
 
@@ -47,16 +46,7 @@ export default function Navbar({openModal, calendars, setPromptDeleteStatus, set
         </div>
 
         <ul className="p-4 space-y-4">
-          <li>
-            <Link to="/" className="block hover:text-gray-300" onClick={() => setSidebarOpen(false)}>
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link to="/logout" className="block hover:text-gray-300" onClick={() => setSidebarOpen(false)}>
-              Logout
-            </Link>
-          </li>
+          <li><b>{username}</b></li>
           <li>
             <CalendarSidebar openModal={openModal} calendars={calendars} setPromptDeleteStatus={setPromptDeleteStatus} setDeletionId={setDeletionId}></CalendarSidebar>
           </li>
