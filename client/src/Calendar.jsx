@@ -4,7 +4,7 @@ import useCurrentUser from "./hooks/useCurrentUser";
 import Navbar from './Navbar';
 import Layout from './Layout';
 import MultiStepModal from './MultiStepModal';
-import { fetchCalendarData, createCalendar, fetchAllCalendarNames, deleteCalendarById } from './utils/calendar';
+import { fetchCalendarData, createCalendar, fetchAllCalendarNames, deleteCalendarById, fetchAllCalendarIds } from './utils/calendar';
 import CalendarGrid from './components/CalendarGrid';
 import DayInfo from './components/DayInfo';
 import CalendarSidebar from './components/CalendarSidebar';
@@ -32,7 +32,49 @@ const Calendar = ({ calendarId, setCalendarId }) => {
   const [deletionId, setDeletionId] = useState(null);
 
   // Load calendar & list
+
+  async function loadCalendars() {
+    try {
+      const data = await fetchAllCalendarNames();
+      setCalendars(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   useEffect(() => {
+    (async () => {
+      document.title = 'Todo Calendar';
+
+      if (calendarId) {
+        const data = await fetchCalendarData(calendarId);
+        if (!data?.error) {
+          console.log('DATA:', data);
+          setCalendar(data);
+          setProgress(data.progress || {});
+          loadCalendars();
+        } else {
+          navigate('/calendar');
+          window.location.reload();
+        }
+      } else {
+        const allIds = await fetchAllCalendarIds(); // rename variable
+        if (allIds.length > 0) {
+          let data2 = await fetchCalendarData(allIds[0]._id); // this is okay
+          calendarId = allIds[0]._id;
+          setCalendar(data2);
+          setProgress(data2.progress || {});
+          loadCalendars();
+          navigate(`/calendar/${allIds[0]._id}`);
+        } else {
+          console.log('No current calendars');
+        }
+      }
+    })();
+  }, []);
+
+
+  /*useEffect(() => {
     async function loadCalendar() {
       try {
         const data = await fetchCalendarData(calendarId);
@@ -46,17 +88,9 @@ const Calendar = ({ calendarId, setCalendarId }) => {
         console.error(err);
       }
     }
-    async function loadCalendars() {
-      try {
-        const data = await fetchAllCalendarNames();
-        setCalendars(data);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    loadCalendar();
+    
     loadCalendars();
-  }, [calendarId]);
+  }, [calendarId]);*/
 
   if (loading) return <p className="text-gray-500">Loading user...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
@@ -73,7 +107,8 @@ const Calendar = ({ calendarId, setCalendarId }) => {
     setNameError(false);
     const cal = await createCalendar(calendarName, description, tasks);
     setIsOpen(false);
-    navigate('/calendar/' + cal._id);
+    navigate(`/calendar/${cal.calendar._id}`);
+    window.location.reload();
   };
 
   const deleteCalendar = async () => {
@@ -92,7 +127,8 @@ const Calendar = ({ calendarId, setCalendarId }) => {
 
       // If user deleted the currently open calendar, redirect
       if (calendarId === deletionId) {
-        navigate("/");
+        navigate("/calendar");
+        window.location.reload();
       }
     } catch (err) {
       console.error(err);

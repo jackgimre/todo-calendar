@@ -2,6 +2,7 @@
 import express from "express";
 import Calendar from "../models/Calendar.js";
 import Authenticator from "../controllers/Authenticator.js";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
@@ -36,11 +37,20 @@ router.get("/", async (req, res) => {
 
 // GET /api/calendar/:id -> return calendar by id
 router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid calendar ID" });
+  }
+
   try {
-    const calendar = await Calendar.findById(req.params.id);
-    if (!calendar) return res.status(404).json({ error: "Calendar not found" });
+    const calendar = await Calendar.findById(id);
+    if (!calendar) {
+      return res.status(404).json({ error: "Calendar not found" });
+    }
     res.json(calendar);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
