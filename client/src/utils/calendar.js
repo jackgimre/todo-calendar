@@ -1,9 +1,11 @@
+import { returnURL } from "./proxy";
+
 export async function fetchCalendarData(calendarId = null) {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("No auth token found");
 
     // Use calendarId if provided, else fetch the most recent calendar
-    const url = calendarId ? `/api/calendar/${calendarId}` : `/api/calendar/`;
+    const url = calendarId ? `${returnURL()}/api/calendar/${calendarId}` : `/api/calendar/`;
 
     const res = await fetch(url, {
         headers: {
@@ -25,7 +27,7 @@ export async function createCalendar(name, description, tasks) {
     console.log(tasks);
     console.log(JSON.stringify(tasks));
     const token = localStorage.getItem("token");
-    const res = await fetch(`/api/calendar/create`, {
+    const res = await fetch(`${returnURL()}/api/calendar/create`, {
         method: "POST",
         headers: {
         "Content-Type": "application/json",
@@ -42,7 +44,7 @@ export async function createCalendar(name, description, tasks) {
 
 export async function fetchAllCalendarNames() {
     const token = localStorage.getItem("token");
-    const res = await fetch(`/api/calendar/all/names`, {
+    const res = await fetch(`${returnURL()}/api/calendar/all/names`, {
         headers: {
         Authorization: `Bearer ${token}`,
         },
@@ -56,7 +58,7 @@ export async function fetchAllCalendarNames() {
 
 export const deleteCalendarById = async (calendarId) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`/api/calendar/${calendarId}`, {
+    const res = await fetch(`${returnURL()}/api/calendar/${calendarId}`, {
         method: "DELETE",
         headers: {
         Authorization: `Bearer ${token}`,

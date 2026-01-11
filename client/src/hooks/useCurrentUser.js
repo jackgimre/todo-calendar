@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { returnURL } from "../utils/proxy";
 
 export default function useCurrentUser() {
   const [user, setUser] = useState(null);
@@ -15,7 +16,7 @@ export default function useCurrentUser() {
           return;
         }
 
-        const res = await fetch("/api/user/me", {
+        const res = await fetch(`${returnURL()}/api/user/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
