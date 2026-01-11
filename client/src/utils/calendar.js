@@ -5,7 +5,7 @@ export async function fetchCalendarData(calendarId = null) {
     if (!token) throw new Error("No auth token found");
 
     // Use calendarId if provided, else fetch the most recent calendar
-    const url = calendarId != null || calendarId != undefined ? `${returnURL()}/api/calendar/${calendarId}` : `/api/calendar/`;
+    const url = calendarId == null || calendarId == undefined ? `/api/calendar/` : `${returnURL()}/api/calendar/${calendarId}`;
 
     const res = await fetch(url, {
         credentials: "include",
