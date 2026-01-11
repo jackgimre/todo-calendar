@@ -38,9 +38,10 @@ const Calendar = ({ calendarId, setCalendarId }) => {
         const data = await fetchCalendarData(calendarId);
         setCalendar(data);
         setProgress(data.progress || {});
-        if(calendarId === undefined) {
-          navigate('/calendar/'+data._id);
+        if (calendarId === undefined) {
+          navigate('/calendar/' + data._id);
         }
+        document.title = `Todo Calendar - ${data.name}`;
       } catch (err) {
         console.error(err);
       }
@@ -57,51 +58,51 @@ const Calendar = ({ calendarId, setCalendarId }) => {
     loadCalendars();
   }, [calendarId]);
 
-    if (loading) return <p className="text-gray-500">Loading user...</p>;
-    if (error) return <p className="text-red-500">{error}</p>;
-    if (!user) return <p className="text-red-500">Not logged in</p>;
+  if (loading) return <p className="text-gray-500">Loading user...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
+  if (!user) return <p className="text-red-500">Not logged in</p>;
 
-    const openModal = () => setIsOpen(true);
-    const closeModal = () => setIsOpen(false);
+  const openModal = () => setIsOpen(true);
+  const closeModal = () => setIsOpen(false);
 
-    const submitCalendar = async () => {
-        if (!calendarName.trim()) {
-            setNameError(true);
-            return; 
-        }
-        setNameError(false);
-        const cal = await createCalendar(calendarName, description, tasks);
-        setIsOpen(false);
-        navigate('/calendar/' + cal._id);
-    };
+  const submitCalendar = async () => {
+    if (!calendarName.trim()) {
+      setNameError(true);
+      return;
+    }
+    setNameError(false);
+    const cal = await createCalendar(calendarName, description, tasks);
+    setIsOpen(false);
+    navigate('/calendar/' + cal._id);
+  };
 
-    const deleteCalendar = async () => {
-        if (!deletionId) return;
-        try {
-            await deleteCalendarById(deletionId);
+  const deleteCalendar = async () => {
+    if (!deletionId) return;
+    try {
+      await deleteCalendarById(deletionId);
 
-            // Remove from sidebar list immediately
-            setCalendars(prev =>
-            prev.filter(cal => cal._id !== deletionId)
-            );
+      // Remove from sidebar list immediately
+      setCalendars(prev =>
+        prev.filter(cal => cal._id !== deletionId)
+      );
 
-            // Close prompt + reset state
-            setPromptDeleteStatus(false);
-            setDeletionId(null);
+      // Close prompt + reset state
+      setPromptDeleteStatus(false);
+      setDeletionId(null);
 
-            // If user deleted the currently open calendar, redirect
-            if (calendarId === deletionId) {
-            navigate("/");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Failed to delete calendar");
-        }
-    };
+      // If user deleted the currently open calendar, redirect
+      if (calendarId === deletionId) {
+        navigate("/");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete calendar");
+    }
+  };
 
-    const handleCellClick = ({ day, month, year }) => {
-        setSelectedDate(new Date(year, month, day));
-    };
+  const handleCellClick = ({ day, month, year }) => {
+    setSelectedDate(new Date(year, month, day));
+  };
 
   const updateProgress = (dateKey, completedIndices) => {
     setProgress(prev => ({
@@ -125,7 +126,7 @@ const Calendar = ({ calendarId, setCalendarId }) => {
         nameError={nameError}
         setNameError={setNameError}
       />
-      <Navbar openModal={openModal} calendars={calendars} setPromptDeleteStatus={setPromptDeleteStatus} setDeletionId={setDeletionId}/>
+      <Navbar openModal={openModal} calendars={calendars} setPromptDeleteStatus={setPromptDeleteStatus} setDeletionId={setDeletionId} />
       <Layout
         sidebarContent={
           <CalendarSidebar openModal={openModal} calendars={calendars} setPromptDeleteStatus={setPromptDeleteStatus} setDeletionId={setDeletionId}></CalendarSidebar>
@@ -133,36 +134,36 @@ const Calendar = ({ calendarId, setCalendarId }) => {
         mainContent={
           <div className='flex flex-col justify-start items-center'>
             <div className='mb-2'>
-                <h1 className="text-2xl font-bold text-center text-gray-800">
-                    {calendar ? calendar.name : "You haven't created a calendar yet."}
-                </h1>
-                {calendar?.description ? <p className='text-center'>{calendar.description}</p> : <></>}
+              <h1 className="text-2xl font-bold text-center text-gray-800">
+                {calendar ? calendar.name : "You haven't created a calendar yet."}
+              </h1>
+              {calendar?.description ? <p className='text-center'>{calendar.description}</p> : <></>}
             </div>
-            <DeletionPrompt isOpen={promptDeleteStatus} onCancel={()=>{setPromptDeleteStatus(false)}} onConfirm={deleteCalendar}></DeletionPrompt>
+            <DeletionPrompt isOpen={promptDeleteStatus} onCancel={() => { setPromptDeleteStatus(false) }} onConfirm={deleteCalendar}></DeletionPrompt>
             {calendar ? (
-            <div className="flex flex-col md:flex-row gap-4 w-full h-[80vh]">
+              <div className="flex flex-col md:flex-row gap-4 w-full h-[80vh]">
                 {/* Calendar takes 70% on large screens */}
                 <div className="md:flex-[0_0_70%]">
-                <CalendarGrid
+                  <CalendarGrid
                     monthData={calendar.monthData}
                     calendar={calendar}
                     selectedDate={selectedDate}
                     onCellClick={handleCellClick}
                     progress={progress}
-                />
+                  />
                 </div>
 
                 {/* DayInfo takes 30% on large screens */}
                 <div className="md:flex-[0_0_30%]">
-                <DayInfo
+                  <DayInfo
                     selectedDate={selectedDate}
                     tasksSchema={calendar.tasks}
                     progress={progress}
                     setProgress={updateProgress}
                     calendarId={calendarId}
-                />
+                  />
                 </div>
-            </div>
+              </div>
             ) : "Click \"Create Calendar\" to get started!"}
           </div>
         }

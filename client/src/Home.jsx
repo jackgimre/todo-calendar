@@ -5,12 +5,16 @@ import AuthToggle from './AuthToggle';
 const App = () => {
   const [backendData, setBackendData] = useState(null);
 
+  useEffect(() => {
+    document.title = 'Todo Calendar';
+  }, []);
+
   return (
     <div>
       <Title></Title>
       <div className="mt-8">
-            <AuthToggle />
-        </div>
+        <AuthToggle />
+      </div>
     </div>
   );
 };
