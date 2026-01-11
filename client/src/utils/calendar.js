@@ -8,6 +8,7 @@ export async function fetchCalendarData(calendarId = null) {
     const url = calendarId ? `${returnURL()}/api/calendar/${calendarId}` : `/api/calendar/`;
 
     const res = await fetch(url, {
+        credentials: "include",
         headers: {
         Authorization: `Bearer ${token}`,
         },
@@ -29,6 +30,7 @@ export async function createCalendar(name, description, tasks) {
     const token = localStorage.getItem("token");
     const res = await fetch(`${returnURL()}/api/calendar/create`, {
         method: "POST",
+        credentials: "include",
         headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -45,6 +47,7 @@ export async function createCalendar(name, description, tasks) {
 export async function fetchAllCalendarNames() {
     const token = localStorage.getItem("token");
     const res = await fetch(`${returnURL()}/api/calendar/all/names`, {
+        credentials: "include",
         headers: {
         Authorization: `Bearer ${token}`,
         },
@@ -60,6 +63,7 @@ export const deleteCalendarById = async (calendarId) => {
     const token = localStorage.getItem("token");
     const res = await fetch(`${returnURL()}/api/calendar/${calendarId}`, {
         method: "DELETE",
+        credentials: "include",
         headers: {
         Authorization: `Bearer ${token}`,
         },

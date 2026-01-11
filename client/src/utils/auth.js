@@ -4,6 +4,7 @@ export async function handleLogin(email, password) {
   try {
     const res = await fetch(`${returnURL()}/api/auth/login`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
@@ -25,6 +26,7 @@ export async function handleSignup(username, email, password) {
   try {
     const res = await fetch(`${returnURL()}/api/auth/signup`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
     });

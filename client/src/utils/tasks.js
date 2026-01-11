@@ -5,6 +5,7 @@ const toggleTaskCompletion = async (calendarId, index, day, month, year) => {
     try {
         const response = await fetch(returnURL()+'/api/tasks/toggle', {
             method: 'POST',
+            credentials: "include",
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
