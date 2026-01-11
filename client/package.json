@@ -1,7 +1,7 @@
 {
   "name": "client",
   "version": "0.1.0",
-  "proxy": "http://localhost:4000",
+  "proxy": "https://todo-calendar-l2tb.onrender.com/",
   "private": true,
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
