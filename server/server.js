@@ -6,10 +6,23 @@ import calendarRoutes from "./routes/calendar.js";
 import tasksRoutes from "./routes/tasks.js";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
+
+const isProd = process.env.NODE_ENV === 'production';
+let clientURL = 'http://localhost:3000';
+let serverURL = 'http://localhost:4000';
+if (isProd) {
+  clientURL = process.env.CLIENT_URL;
+  serverURL = process.env.SERVER_URL;
+}
+app.use(cors({
+  origin: [clientURL, serverURL],
+  credentials: true
+}));
 
 app.use(morgan("dev"));
 app.use(express.json());
