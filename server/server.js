@@ -12,15 +12,16 @@ dotenv.config();
 
 const app = express();
 
-const isProd = process.env.NODE_ENV === 'production';
-let clientURL = 'http://localhost:3000';
-let serverURL = 'http://localhost:4000';
-if (isProd) {
-  clientURL = process.env.CLIENT_URL;
-  serverURL = process.env.SERVER_URL;
-}
+const isProd = process.env.NODE_ENV === "production";
+let clientURL = isProd
+  ? 'https://todo-calendar-plum-kappa.vercel.app'
+  : 'http://localhost:3000';
+let serverURL = isProd
+  ? 'https://todo-calendar-l2tb.onrender.com'
+  : 'http://localhost:4000';
+
 app.use(cors({
-  origin: [clientURL, serverURL],
+  origin: [clientURL, serverURL].map(url => url.replace(/\/$/, "")),
   credentials: true
 }));
 
