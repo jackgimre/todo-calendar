@@ -5,8 +5,6 @@ import Authenticator from '../controllers/Authenticator.js';
 
 const router = express.Router();
 dotenv.config();
-const isProd = process.env.NODE_ENV === 'production';
-
 /**
  * Signup route
  */
@@ -35,8 +33,8 @@ router.post('/signup', async (req, res) => {
 		// Set HTTP-only cookie
 		res.cookie('token', token, {
 			httpOnly: true,
-			sameSite: isProd ? 'none' : 'lax',
-			secure: isProd, // must be true on HTTPS (production)
+			sameSite: 'none',
+			secure: true, // must be true on HTTPS (production)
 			maxAge: 24 * 60 * 60 * 1000
 		});
 
@@ -64,8 +62,8 @@ router.post('/login', async (req, res) => {
 	// Cookie setup for localhost HTTP
 	res.cookie('token', token, {
 		httpOnly: true,
-		sameSite: isProd ? 'none' : 'lax',
-		secure: isProd, // must be true on HTTPS (production)
+		sameSite: 'none',
+		secure: true, // must be true on HTTPS (production)
 		maxAge: 24 * 60 * 60 * 1000
 	});
 
@@ -79,7 +77,7 @@ router.post('/logout', (req, res) => {
 	res.clearCookie('token', {
 		httpOnly: true,
 		sameSite: 'none',
-		secure: false
+		secure: true
 	});
 	res.json({ success: true });
 });
