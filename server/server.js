@@ -11,9 +11,8 @@ import cookieParser from 'cookie-parser';
 
 dotenv.config();
 const app = express();
-const allowedOrigins = ['http://localhost:3000', 'https://todo-calendar-plum-kappa.vercel.app/'];
 
-const allowedOrigin = process.env.FRONTEND_URL || 'https://your-frontend.vercel.app';
+const allowedOrigin = process.env.CLIENT_URL || 'https://todo-calendar-plum-kappa.vercel.app';
 
 app.use(
 	cors({
