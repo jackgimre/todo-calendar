@@ -27,10 +27,11 @@ const corsOptions = {
 	allowedHeaders: ['Content-Type', 'Authorization']
 };
 
+// CORS middleware
 app.use(cors(corsOptions));
 
-// Preflight OPTIONS requests (Safari cares)
-app.options('*', cors(corsOptions));
+// Preflight OPTIONS requests
+app.options('/*', cors(corsOptions));
 
 app.use(cookieParser());
 app.use(express.json());
