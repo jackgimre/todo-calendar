@@ -1,44 +1,76 @@
 import { returnURL } from "./proxy";
 
+/**
+ * Login with email + password.
+ * Backend sets HTTP-only cookie.
+ * Frontend never sees or stores a token.
+ */
 export async function handleLogin(email, password) {
   try {
     const res = await fetch(`${returnURL()}/api/auth/login`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
     });
 
     const data = await res.json();
 
-    if (!res.ok) throw new Error(data.error || "Login failed");
+    if (!res.ok) {
+      throw new Error(data.error || "Login failed");
+    }
 
-    // Store JWT (localStorage for now)
-    localStorage.setItem("token", data.token);
-
-    return { success: true, token: data.token };
+    // No token handling here at all
+    return { success: true, user: data.user };
   } catch (err) {
     return { success: false, error: err.message };
   }
 }
 
+/**
+ * Signup.
+ * Backend should also set cookie so user is logged in immediately.
+ */
 export async function handleSignup(username, email, password) {
   try {
     const res = await fetch(`${returnURL()}/api/auth/signup`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, email, password })
     });
 
     const data = await res.json();
 
-    if (!res.ok) throw new Error(data.error || "Signup failed");
+    if (!res.ok) {
+      throw new Error(data.error || "Signup failed");
+    }
 
-    // Optionally, login automatically after signup
-    localStorage.setItem("token", data.token); // you could have backend return a JWT here
+    return { success: true, user: data.user };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
 
-    return { success: true, userId: data.userId };
+/**
+ * Logout by clearing cookie on backend
+ */
+export async function handleLogout() {
+  try {
+    const res = await fetch(`${returnURL()}/api/auth/logout`, {
+      method: "POST",
+      credentials: "include"
+    });
+
+    if (!res.ok) {
+      throw new Error("Logout failed");
+    }
+
+    return { success: true };
   } catch (err) {
     return { success: false, error: err.message };
   }

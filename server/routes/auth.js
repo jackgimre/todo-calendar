@@ -1,50 +1,85 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import Authenticator from "../controllers/Authenticator.js";
 import User from "../models/User.js";
+import Authenticator from "../controllers/Authenticator.js";
 
 const router = express.Router();
 
-router.post('/signup', async (req, res) => {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
-        return res.status(400).json({ error: 'All fields are required' });
-    }
-    try {
-        const passwordHash = await Authenticator.returnHash(password);
-        const newUser = new User({ username, email, passwordHash });
-        await newUser.save();
-        res.status(201).json({ message: 'User created successfully' });
-    } catch (error) {
-    if (error.code === 11000) { // Mongo duplicate key
-        return res.status(400).json({ error: 'Email or username already exists' });
-    }
-    res.status(500).json({ error: 'Error creating user' });
-    }
+/**
+ * Signup route
+ */
+router.post("/signup", async (req, res) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  try {
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ error: "Email already exists" });
+
+    const hash = await Authenticator.returnHash(password);
+
+    const user = await User.create({
+      username,
+      email,
+      passwordHash: hash,
+      calendars: []
+    });
+
+    const token = Authenticator.returnToken(user._id);
+
+    // Set HTTP-only cookie
+    res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "lax",   // NOT "none" on HTTP
+        secure: false,     // must be false on localhost
+        maxAge: 24 * 60 * 60 * 1000
+    });
+
+    res.json({ user: { _id: user._id, username: user.username, email: user.email } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error creating user" });
+  }
 });
 
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
-    }
-    try {
-        const user = await User.findOne({ email });
-        if (!user) return res.status(401).json({ error: "Invalid email or password" });
+/**
+ * Login route
+ */
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
 
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return res.status(401).json({ error: "Invalid email or password" });
+  const user = await User.findOne({ email });
+  if (!user) return res.status(401).json({ error: "Invalid email or password" });
 
-        const token = Authenticator.returnToken(user._id);
-        res.json({ token });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: 'Error logging in' });
-    }
+  const valid = await Authenticator.verifyPassword(password, user.passwordHash);
+  if (!valid) return res.status(401).json({ error: "Invalid email or password" });
+
+  const token = Authenticator.returnToken(user._id);
+
+  // Cookie setup for localhost HTTP
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: false,       // must be false on localhost
+    sameSite: "lax",     // safe for localhost dev
+    maxAge: 24 * 60 * 60 * 1000
+  });
+
+  res.json({ user: { _id: user._id, username: user.username, email: user.email } });
 });
 
-router.post('/check-login', Authenticator.authMiddleware, (req, res) => {
-    res.json({ message: "User is logged in", userId: req.userId });
+/**
+ * Logout route
+ */
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "none",
+    secure: false
+  });
+  res.json({ success: true });
 });
 
 export default router;

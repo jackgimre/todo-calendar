@@ -16,6 +16,10 @@ const calendarSchema = new mongoose.Schema({
     default: {},
   },
   createdAt: { type: Date, default: Date.now },
+  createdBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User"
+  }
 });
 
 export default mongoose.model("Calendar", calendarSchema);

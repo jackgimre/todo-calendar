@@ -9,25 +9,24 @@ export default function useCurrentUser() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setUser(null);
-          setLoading(false);
+        const res = await fetch(`${returnURL()}/api/user/me`, {
+          method: "GET",
+          credentials: "include", // send cookies automatically
+        });
+
+        const data = await res.json(); // only call once
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            setUser(null);
+            setError("Not authenticated");
+          } else {
+            throw new Error(data.error || "Failed to fetch user");
+          }
           return;
         }
 
-        const res = await fetch(`${returnURL()}/api/user/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch user");
-        }
-
-        const data = await res.json();
-        setUser(data.user);
+        setUser(data.user || null);
       } catch (err) {
         setError(err.message);
         setUser(null);

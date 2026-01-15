@@ -1,96 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import useCurrentUser from "./hooks/useCurrentUser";
-import Navbar from './Navbar';
-import Layout from './Layout';
-import MultiStepModal from './MultiStepModal';
-import { fetchCalendarData, createCalendar, fetchAllCalendarNames, deleteCalendarById, fetchAllCalendarIds } from './utils/calendar';
-import CalendarGrid from './components/CalendarGrid';
-import DayInfo from './components/DayInfo';
-import CalendarSidebar from './components/CalendarSidebar';
-import DeletionPrompt from './components/DeletionPrompt';
+import Navbar from "./Navbar";
+import Layout from "./Layout";
+import MultiStepModal from "./MultiStepModal";
+import {
+  fetchCalendarData,
+  createCalendar,
+  fetchAllCalendars,
+  deleteCalendarById,
+} from "./utils/calendar";
+import CalendarGrid from "./components/CalendarGrid";
+import DayInfo from "./components/DayInfo";
+import CalendarSidebar from "./components/CalendarSidebar";
+import DeletionPrompt from "./components/DeletionPrompt";
 
-const Calendar = ({ calendarId, setCalendarId }) => {
+const Calendar = ({ calendarId: initialCalendarId }) => {
   const navigate = useNavigate();
   const { user, loading, error } = useCurrentUser();
+
+  const [calendarId, setCalendarId] = useState(initialCalendarId || null);
   const [calendar, setCalendar] = useState(null);
+  const [calendars, setCalendars] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [progress, setProgress] = useState({});
 
-  // Modal & calendar creation
   const [isOpen, setIsOpen] = useState(false);
   const [calendarName, setCalendarName] = useState("");
   const [description, setDescription] = useState("");
   const [tasks, setTasks] = useState({
-    Sun: [], Mon: [], Tue: [], Wed: [], Thu: [], Fri: [], Sat: []
+    Sun: [], Mon: [], Tue: [], Wed: [], Thu: [], Fri: [], Sat: [],
   });
 
-  // Sidebar list of calendars
-  const [calendars, setCalendars] = useState([]);
   const [nameError, setNameError] = useState(false);
   const [promptDeleteStatus, setPromptDeleteStatus] = useState(false);
   const [deletionId, setDeletionId] = useState(null);
 
-  // Load calendar & list
+  // Load all calendars for the current user
 
-  async function loadCalendars() {
+  const loadCalendars = async () => {
     try {
-      const data = await fetchAllCalendarNames();
-      setCalendars(data);
+      const data = await fetchAllCalendars();
+      setCalendars(data || []);
+
+      // Only select first calendar if no initial ID was provided
+      if (!initialCalendarId && data.length > 0) {
+        console.log('Data:', data);
+        const firstId = data[0].id;
+        setCalendarId(firstId);
+        navigate(`/calendar/${firstId}`);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load calendars:", err);
     }
-  }
+  };
+
+  // Load data for selected calendar
+  const loadCalendarData = async (id) => {
+    console.log(id);
+    try {
+      if (id) {
+        const data = await fetchCalendarData(id);
+        console.log(data);
+        setCalendar(data);
+        setCalendarId(data._id);
+        setProgress(data.progress);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
-    (async () => {
-      document.title = 'Todo Calendar';
-
-      if (calendarId) {
-        const data = await fetchCalendarData(calendarId);
-        if (!data?.error) {
-          console.log('DATA:', data);
-          setCalendar(data);
-          setProgress(data.progress || {});
-          loadCalendars();
-        } else {
-          navigate('/calendar');
-          window.location.reload();
-        }
-      } else {
-        const allIds = await fetchAllCalendarIds(); // rename variable
-        if (allIds.length > 0) {
-          let data2 = await fetchCalendarData(allIds[0]._id); // this is okay
-          calendarId = allIds[0]._id;
-          setCalendar(data2);
-          setProgress(data2.progress || {});
-          loadCalendars();
-          navigate(`/calendar/${allIds[0]._id}`);
-        } else {
-          console.log('No current calendars');
-        }
-      }
-    })();
-  }, []);
-
-
-  /*useEffect(() => {
-    async function loadCalendar() {
-      try {
-        const data = await fetchCalendarData(calendarId);
-        setCalendar(data);
-        setProgress(data.progress || {});
-        if (calendarId === undefined) {
-          navigate('/calendar/' + data._id);
-        }
-        document.title = `Todo Calendar - ${data.name}`;
-      } catch (err) {
-        console.error(err);
-      }
+    document.title = "Todo Calendar";
+    if (!user) return;
+    if (user) loadCalendars();
+    if (user && calendarId) {
+      loadCalendarData(calendarId);
     }
-    
-    loadCalendars();
-  }, [calendarId]);*/
+  }, [user, calendarId]);
+
+  useEffect(() => {
+    console.log(calendars);
+  }, [calendars]);
 
   if (loading) return <p className="text-gray-500">Loading user...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
@@ -105,10 +97,21 @@ const Calendar = ({ calendarId, setCalendarId }) => {
       return;
     }
     setNameError(false);
-    const cal = await createCalendar(calendarName, description, tasks);
-    setIsOpen(false);
-    navigate(`/calendar/${cal.calendar._id}`);
-    window.location.reload();
+
+    try {
+      const data = await createCalendar(calendarName, description, tasks);
+      console.log('New Calendar:', data);
+      const newCal = data.calendar;
+
+      setCalendarId(newCal._id);
+      setIsOpen(false);
+      loadCalendars();
+      setCalendarName(null);
+      setDescription(null);
+      setTasks({ Sun: [], Mon: [], Tue: [], Wed: [], Thu: [], Fri: [], Sat: [], });
+    } catch (err) {
+      console.error("Failed to create calendar:", err);
+    }
   };
 
   const deleteCalendar = async () => {
@@ -116,19 +119,16 @@ const Calendar = ({ calendarId, setCalendarId }) => {
     try {
       await deleteCalendarById(deletionId);
 
-      // Remove from sidebar list immediately
-      setCalendars(prev =>
-        prev.filter(cal => cal._id !== deletionId)
-      );
-
-      // Close prompt + reset state
+      setCalendars((prev) => prev.filter((c) => c._id !== deletionId));
       setPromptDeleteStatus(false);
       setDeletionId(null);
 
-      // If user deleted the currently open calendar, redirect
-      if (calendarId === deletionId) {
-        navigate("/calendar");
+      await loadCalendars();
+      if (calendar[0] == null) {
+        navigate('/calendar/');
         window.location.reload();
+      } else {
+        loadCalendarData(calendars[0].id);
       }
     } catch (err) {
       console.error(err);
@@ -141,10 +141,7 @@ const Calendar = ({ calendarId, setCalendarId }) => {
   };
 
   const updateProgress = (dateKey, completedIndices) => {
-    setProgress(prev => ({
-      ...prev,
-      [dateKey]: completedIndices
-    }));
+    setProgress((prev) => ({ ...prev, [dateKey]: completedIndices }));
   };
 
   return (
@@ -162,23 +159,42 @@ const Calendar = ({ calendarId, setCalendarId }) => {
         nameError={nameError}
         setNameError={setNameError}
       />
-      <Navbar openModal={openModal} calendars={calendars} setPromptDeleteStatus={setPromptDeleteStatus} setDeletionId={setDeletionId} username={user.username} />
+
+      <Navbar
+        openModal={openModal}
+        calendars={calendars}
+        setPromptDeleteStatus={setPromptDeleteStatus}
+        setDeletionId={setDeletionId}
+        username={user.username}
+      />
+
       <Layout
         sidebarContent={
-          <CalendarSidebar openModal={openModal} calendars={calendars} setPromptDeleteStatus={setPromptDeleteStatus} setDeletionId={setDeletionId}></CalendarSidebar>
+          <CalendarSidebar
+            openModal={openModal}
+            calendars={calendars}
+            setPromptDeleteStatus={setPromptDeleteStatus}
+            setDeletionId={setDeletionId}
+            setCalendarId={setCalendarId}
+          />
         }
         mainContent={
-          <div className='flex flex-col justify-start items-center'>
-            <div className='mb-2'>
+          <div className="flex flex-col justify-start items-center">
+            <div className="mb-2">
               <h1 className="text-2xl font-bold text-center text-gray-800">
                 {calendar ? calendar.name : "You haven't created a calendar yet."}
               </h1>
-              {calendar?.description ? <p className='text-center'>{calendar.description}</p> : <></>}
+              {calendar?.description && <p className="text-center">{calendar.description}</p>}
             </div>
-            <DeletionPrompt isOpen={promptDeleteStatus} onCancel={() => { setPromptDeleteStatus(false) }} onConfirm={deleteCalendar}></DeletionPrompt>
+
+            <DeletionPrompt
+              isOpen={promptDeleteStatus}
+              onCancel={() => setPromptDeleteStatus(false)}
+              onConfirm={deleteCalendar}
+            />
+
             {calendar ? (
               <div className="flex flex-col md:flex-row gap-4 w-full h-[80vh]">
-                {/* Calendar takes 70% on large screens */}
                 <div className="md:flex-[0_0_70%]">
                   <CalendarGrid
                     monthData={calendar.monthData}
@@ -188,8 +204,6 @@ const Calendar = ({ calendarId, setCalendarId }) => {
                     progress={progress}
                   />
                 </div>
-
-                {/* DayInfo takes 30% on large screens */}
                 <div className="md:flex-[0_0_30%]">
                   <DayInfo
                     selectedDate={selectedDate}
@@ -200,7 +214,9 @@ const Calendar = ({ calendarId, setCalendarId }) => {
                   />
                 </div>
               </div>
-            ) : "Click \"Create Calendar\" to get started!"}
+            ) : (
+              <p>Click "Create Calendar" to get started!</p>
+            )}
           </div>
         }
       />

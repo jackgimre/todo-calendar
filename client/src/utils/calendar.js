@@ -1,92 +1,93 @@
+// src/utils/calendar.js
 import { returnURL } from "./proxy";
 
-export async function fetchCalendarData(calendarId = null) {
-    const token = localStorage.getItem("token");
-    if (!token) throw new Error("No auth token found");
+const API_BASE = "/api/calendar";
 
-    // Use calendarId if provided, else fetch the most recent calendar
-    const url = calendarId === null || calendarId === undefined ? `/api/calendar/` : `${returnURL()}/api/calendar/${calendarId}`;
-
-    const res = await fetch(url, {
-        credentials: "include",
-        headers: {
-        Authorization: `Bearer ${token}`,
-        },
-    });
-
-    console.log(res.ok, res.status);
-    if (!res.ok) {
-        return { error: "No calendar with this id." };
-    }
-
-    const data = await res.json();
-    return data;
+/**
+ * Safely handle fetch responses
+ */
+async function handleResponse(res) {
+  if (!res.ok) {
+    let message = "Request failed";
+    try {
+      const data = await res.json();
+      message = data.error || message;
+    } catch {}
+    throw new Error(message);
+  }
+  return res.json();
 }
 
+/**
+ * Fetch all calendars for the current user
+ */
+export async function fetchAllCalendars({ signal } = {}) {
+  const res = await fetch(`${returnURL()}/api/user/me/calendars`, {
+    method: "GET",
+    credentials: "include",
+    signal
+  });
+
+  return handleResponse(res);
+}
+
+/**
+ * Fetch a single calendar by ID
+ */
+export async function fetchCalendarData(calendarId) {
+  if (!calendarId) {
+    throw new Error("Calendar ID is required");
+  }
+
+  const res = await fetch(`${returnURL()}/api/calendar/id/${calendarId}`, {
+    method: "GET",
+    credentials: "include"
+  });
+
+  if (!res.ok) {
+    let errorMsg = "Failed to fetch calendar";
+    try {
+      const errData = await res.json();
+      errorMsg = errData.error || errorMsg;
+    } catch {}
+    throw new Error(errorMsg);
+  }
+
+  return res.json();
+}
+
+/**
+ * Create a new calendar
+ */
 export async function createCalendar(name, description, tasks) {
-    console.log(name, description);
-    console.log(tasks);
-    console.log(JSON.stringify(tasks));
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${returnURL()}/api/calendar/create`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name, description, tasks }),
-    });
-    if (!res.ok) {
-        throw new Error("Failed to create calendar");
-    }
-    const data = await res.json();
-    return data;
+  const res = await fetch(`${returnURL()}/api/calendar/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      name,
+      description,
+      tasks
+    })
+  });
+
+  return handleResponse(res);
 }
 
-export async function fetchAllCalendarNames() {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${returnURL()}/api/calendar/all/names`, {
-        credentials: "include",
-        headers: {
-        Authorization: `Bearer ${token}`,
-        },
-    });
-    if (!res.ok) {
-        throw new Error("Failed to fetch calendar names");
-    }
-    const data = await res.json();
-    return data;
+/**
+ * Delete a calendar by ID
+ */
+export async function deleteCalendarById(calendarId) {
+  if (!calendarId) {
+    throw new Error("Calendar ID is required");
+  }
+
+  const res = await fetch(`${returnURL()}/api/calendar/id/${calendarId}`, {
+    method: "DELETE",
+    credentials: "include"
+  });
+
+  return handleResponse(res);
 }
-
-export async function fetchAllCalendarIds() {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${returnURL()}/api/calendar/all/ids`, {
-        credentials: "include",
-        headers: {
-        Authorization: `Bearer ${token}`,
-        },
-    });
-    if (!res.ok) {
-        throw new Error("Failed to fetch calendar ids");
-    }
-    const data = await res.json();
-    return data;
-}
-
-export const deleteCalendarById = async (calendarId) => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${returnURL()}/api/calendar/${calendarId}`, {
-        method: "DELETE",
-        credentials: "include",
-        headers: {
-        Authorization: `Bearer ${token}`,
-        },
-    });
-
-    if (!res.ok) {
-        throw new Error("Failed to delete calendar");
-    }
-
-    return res.json();
-};
