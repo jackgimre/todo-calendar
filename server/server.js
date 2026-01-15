@@ -11,17 +11,24 @@
 
   dotenv.config();
   const app = express();
-  app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "https://todo-calendar-plum-kappa.vercel.app/"
+  ];
+
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
+    credentials: true
+  }));
+
   app.use(cookieParser());
   app.use(express.json());
-
-  const isProd = process.env.NODE_ENV === "production";
-  let clientURL = isProd
-    ? 'https://todo-calendar-plum-kappa.vercel.app'
-    : 'http://localhost:3000';
-  let serverURL = isProd
-    ? 'https://todo-calendar-l2tb.onrender.com'
-    : 'http://localhost:4000';
 
   app.use(morgan("dev"));
   app.use(express.json());
