@@ -1,5 +1,12 @@
-// src/utils/calendar.js
 import { returnURL } from './proxy';
+
+/**
+ * Get Authorization header from token
+ */
+function getAuthHeader() {
+	const token = localStorage.getItem('token');
+	return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 /**
  * Safely handle fetch responses
@@ -22,7 +29,7 @@ async function handleResponse(res) {
 export async function fetchAllCalendars({ signal } = {}) {
 	const res = await fetch(`${returnURL()}/api/user/me/calendars/`, {
 		method: 'GET',
-		credentials: 'include',
+		headers: { ...getAuthHeader() },
 		signal
 	});
 
@@ -33,25 +40,14 @@ export async function fetchAllCalendars({ signal } = {}) {
  * Fetch a single calendar by ID
  */
 export async function fetchCalendarData(calendarId) {
-	if (!calendarId) {
-		throw new Error('Calendar ID is required');
-	}
+	if (!calendarId) throw new Error('Calendar ID is required');
 
 	const res = await fetch(`${returnURL()}/api/calendar/id/${calendarId}/`, {
 		method: 'GET',
-		credentials: 'include'
+		headers: { ...getAuthHeader() }
 	});
 
-	if (!res.ok) {
-		let errorMsg = 'Failed to fetch calendar';
-		try {
-			const errData = await res.json();
-			errorMsg = errData.error || errorMsg;
-		} catch {}
-		throw new Error(errorMsg);
-	}
-
-	return res.json();
+	return handleResponse(res);
 }
 
 /**
@@ -61,14 +57,10 @@ export async function createCalendar(name, description, tasks) {
 	const res = await fetch(`${returnURL()}/api/calendar/create/`, {
 		method: 'POST',
 		headers: {
-			'Content-Type': 'application/json'
+			'Content-Type': 'application/json',
+			...getAuthHeader()
 		},
-		credentials: 'include',
-		body: JSON.stringify({
-			name,
-			description,
-			tasks
-		})
+		body: JSON.stringify({ name, description, tasks })
 	});
 
 	return handleResponse(res);
@@ -78,13 +70,11 @@ export async function createCalendar(name, description, tasks) {
  * Delete a calendar by ID
  */
 export async function deleteCalendarById(calendarId) {
-	if (!calendarId) {
-		throw new Error('Calendar ID is required');
-	}
+	if (!calendarId) throw new Error('Calendar ID is required');
 
 	const res = await fetch(`${returnURL()}/api/calendar/id/${calendarId}/`, {
 		method: 'DELETE',
-		credentials: 'include'
+		headers: { ...getAuthHeader() }
 	});
 
 	return handleResponse(res);

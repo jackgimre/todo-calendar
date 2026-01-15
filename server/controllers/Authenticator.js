@@ -25,10 +25,16 @@ const returnToken = (userID) => {
 };
 
 /**
- * Cookie-based auth middleware
+ * Token-based auth middleware for Authorization header
  */
 export const authMiddleware = async (req, res, next) => {
-	const token = req.cookies?.token;
+	// Expect header: Authorization: Bearer <token>
+	const authHeader = req.headers.authorization;
+	if (!authHeader) {
+		return res.status(401).json({ error: 'Not authenticated' });
+	}
+
+	const token = authHeader.split(' ')[1]; // "Bearer <token>"
 
 	if (!token) {
 		return res.status(401).json({ error: 'Not authenticated' });
@@ -37,6 +43,8 @@ export const authMiddleware = async (req, res, next) => {
 	try {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 		const user = await User.findById(decoded.id).populate('calendars');
+		if (!user) return res.status(401).json({ error: 'User not found' });
+
 		req.user = user;
 		next();
 	} catch (err) {

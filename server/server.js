@@ -7,7 +7,6 @@ import tasksRoutes from './routes/tasks.js';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import cookieParser from 'cookie-parser';
 
 dotenv.config();
 const app = express();
@@ -15,23 +14,20 @@ const app = express();
 // Allowed frontend origins
 const allowedOrigins = [process.env.CLIENT_URL, 'http://localhost:3000'];
 
-// CORS middleware (applied globally)
-const corsOptions = {
-	origin: function (origin, callback) {
-		if (!origin) return callback(null, true); // server-to-server or same-origin
-		if (allowedOrigins.includes(origin)) return callback(null, true);
-		callback(new Error('Not allowed by CORS'));
-	},
-	credentials: true, // allows cookies
-	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-	allowedHeaders: ['Content-Type', 'Authorization']
-};
+// CORS middleware
+app.use(
+	cors({
+		origin: function (origin, callback) {
+			if (!origin) return callback(null, true); // server-to-server or same-origin
+			if (allowedOrigins.includes(origin)) return callback(null, true);
+			callback(new Error('Not allowed by CORS'));
+		},
+		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+		allowedHeaders: ['Content-Type', 'Authorization'] // still needed for Bearer tokens
+	})
+);
 
-// Apply CORS globally
-app.use(cors(corsOptions));
-
-// Parse cookies & JSON
-app.use(cookieParser());
+// Parse JSON
 app.use(express.json());
 app.use(morgan('dev'));
 

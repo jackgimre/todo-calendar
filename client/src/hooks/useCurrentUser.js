@@ -8,13 +8,23 @@ export default function useCurrentUser() {
 
 	useEffect(() => {
 		const fetchUser = async () => {
+			const token = localStorage.getItem('token');
+			if (!token) {
+				setUser(null);
+				setError('Not authenticated');
+				setLoading(false);
+				return;
+			}
+
 			try {
 				const res = await fetch(`${returnURL()}/api/user/me/`, {
 					method: 'GET',
-					credentials: 'include' // send cookies automatically
+					headers: {
+						Authorization: `Bearer ${token}`
+					}
 				});
 
-				const data = await res.json(); // only call once
+				const data = await res.json();
 
 				if (!res.ok) {
 					if (res.status === 401) {

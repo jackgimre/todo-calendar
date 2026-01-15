@@ -2,14 +2,12 @@ import { returnURL } from './proxy';
 
 /**
  * Login with email + password.
- * Backend sets HTTP-only cookie.
- * Frontend never sees or stores a token.
+ * Stores JWT token in localStorage.
  */
 export async function handleLogin(email, password) {
 	try {
 		const res = await fetch(`${returnURL()}/api/auth/login/`, {
 			method: 'POST',
-			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json'
 			},
@@ -22,7 +20,9 @@ export async function handleLogin(email, password) {
 			throw new Error(data.error || 'Login failed');
 		}
 
-		// No token handling here at all
+		// Store token in localStorage
+		localStorage.setItem('token', data.token);
+
 		return { success: true, user: data.user };
 	} catch (err) {
 		return { success: false, error: err.message };
@@ -31,13 +31,12 @@ export async function handleLogin(email, password) {
 
 /**
  * Signup.
- * Backend should also set cookie so user is logged in immediately.
+ * Stores JWT token in localStorage.
  */
 export async function handleSignup(username, email, password) {
 	try {
 		const res = await fetch(`${returnURL()}/api/auth/signup/`, {
 			method: 'POST',
-			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json'
 			},
@@ -50,6 +49,9 @@ export async function handleSignup(username, email, password) {
 			throw new Error(data.error || 'Signup failed');
 		}
 
+		// Store token in localStorage
+		localStorage.setItem('token', data.token);
+
 		return { success: true, user: data.user };
 	} catch (err) {
 		return { success: false, error: err.message };
@@ -57,21 +59,17 @@ export async function handleSignup(username, email, password) {
 }
 
 /**
- * Logout by clearing cookie on backend
+ * Logout by removing token from localStorage
  */
-export async function handleLogout() {
-	try {
-		const res = await fetch(`${returnURL()}/api/auth/logout/`, {
-			method: 'POST',
-			credentials: 'include'
-		});
+export function handleLogout() {
+	localStorage.removeItem('token');
+	return { success: true };
+}
 
-		if (!res.ok) {
-			throw new Error('Logout failed');
-		}
-
-		return { success: true };
-	} catch (err) {
-		return { success: false, error: err.message };
-	}
+/**
+ * Helper to get Authorization header
+ */
+export function getAuthHeader() {
+	const token = localStorage.getItem('token');
+	return token ? { Authorization: `Bearer ${token}` } : {};
 }

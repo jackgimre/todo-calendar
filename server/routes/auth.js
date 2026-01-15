@@ -5,8 +5,10 @@ import Authenticator from '../controllers/Authenticator.js';
 
 const router = express.Router();
 dotenv.config();
+
 /**
  * Signup route
+ * Returns token in JSON for localStorage
  */
 router.post('/signup', async (req, res) => {
 	const { username, email, password } = req.body;
@@ -28,17 +30,14 @@ router.post('/signup', async (req, res) => {
 			calendars: []
 		});
 
+		// Generate JWT token
 		const token = Authenticator.returnToken(user._id);
 
-		// Set HTTP-only cookie
-		res.cookie('token', token, {
-			httpOnly: true,
-			sameSite: 'none',
-			secure: true, // must be true on HTTPS (production)
-			maxAge: 24 * 60 * 60 * 1000
+		// Return token and user in JSON
+		res.json({
+			token,
+			user: { _id: user._id, username: user.username, email: user.email }
 		});
-
-		res.json({ user: { _id: user._id, username: user.username, email: user.email } });
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({ error: 'Error creating user' });
@@ -47,39 +46,38 @@ router.post('/signup', async (req, res) => {
 
 /**
  * Login route
+ * Returns token in JSON for localStorage
  */
 router.post('/login', async (req, res) => {
 	const { email, password } = req.body;
 
-	const user = await User.findOne({ email });
-	if (!user) return res.status(401).json({ error: 'Invalid email or password' });
+	try {
+		const user = await User.findOne({ email });
+		if (!user) return res.status(401).json({ error: 'Invalid email or password' });
 
-	const valid = await Authenticator.verifyPassword(password, user.passwordHash);
-	if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
+		const valid = await Authenticator.verifyPassword(password, user.passwordHash);
+		if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
 
-	const token = Authenticator.returnToken(user._id);
+		const token = Authenticator.returnToken(user._id);
 
-	// Cookie setup for localhost HTTP
-	res.cookie('token', token, {
-		httpOnly: true,
-		sameSite: 'none',
-		secure: true, // must be true on HTTPS (production)
-		maxAge: 24 * 60 * 60 * 1000
-	});
-
-	res.json({ user: { _id: user._id, username: user.username, email: user.email } });
+		res.json({
+			token,
+			user: { _id: user._id, username: user.username, email: user.email }
+		});
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ error: 'Error logging in' });
+	}
 });
 
 /**
  * Logout route
+ * For localStorage tokens, frontend just removes the token
+ * This route is optional, just for symmetry
  */
 router.post('/logout', (req, res) => {
-	res.clearCookie('token', {
-		httpOnly: true,
-		sameSite: 'none',
-		secure: true
-	});
-	res.json({ success: true });
+	// No cookie to clear — just tell frontend to remove token
+	res.json({ success: true, message: 'Remove token on client to logout' });
 });
 
 export default router;
