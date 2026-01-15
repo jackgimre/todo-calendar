@@ -70,14 +70,4 @@ router.post('/login', async (req, res) => {
 	}
 });
 
-/**
- * Logout route
- * For localStorage tokens, frontend just removes the token
- * This route is optional, just for symmetry
- */
-router.post('/logout', (req, res) => {
-	// No cookie to clear — just tell frontend to remove token
-	res.json({ success: true, message: 'Remove token on client to logout' });
-});
-
 export default router;
