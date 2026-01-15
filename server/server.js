@@ -12,12 +12,18 @@ import cookieParser from 'cookie-parser';
 dotenv.config();
 const app = express();
 
-const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:3000';
+const allowedOrigins = [process.env.CLIENT_URL, 'http://localhost:3000'];
 
 app.use(
 	cors({
-		origin: allowedOrigin, // exact frontend URL
-		credentials: true, // allow cookies
+		origin: function (origin, callback) {
+			if (!origin) return callback(null, true); // same-origin / non-browser
+			if (allowedOrigins.includes(origin)) {
+				return callback(null, true);
+			}
+			callback(new Error('Not allowed by CORS'));
+		},
+		credentials: true,
 		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 		allowedHeaders: ['Content-Type', 'Authorization']
 	})
