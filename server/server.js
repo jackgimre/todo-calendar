@@ -12,7 +12,7 @@ import cookieParser from 'cookie-parser';
 dotenv.config();
 const app = express();
 
-const allowedOrigin = process.env.NODE_ENV === 'production' ? process.env.CLIENT_URL : 'http://localhost:3000';
+const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:3000';
 
 app.use(
 	cors({
