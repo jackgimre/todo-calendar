@@ -70,15 +70,14 @@ const CalendarGrid = ({ monthData, calendar, selectedDate, onCellClick, progress
               )}
 
               {/* Progress bar */}
-                <div className="w-full h-1 bg-gray-200 mt-2 rounded">
-                <div
-                    className={`h-1 rounded transition-all ${
-                    percent === 100 ? "bg-green-500" : "bg-blue-500"
-                    }`}
-                    style={{ width: `${percent}%` }}
-                />
+                <div className="w-full h-1 bg-gray-200 mt-2 rounded group-hover:bg-gray-100">
+                  <div
+                      className={`h-1 rounded transition-all ${
+                      percent === 100 ? "bg-green-500" : "bg-blue-500"
+                      }`}
+                      style={{ width: `${percent}%` }}
+                  />
                 </div>
-
             </div>
           );
         })}
