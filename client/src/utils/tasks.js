@@ -3,7 +3,7 @@ import { returnURL } from './proxy';
 const toggleTaskCompletion = async (calendarId, index, day, month, year) => {
 	let dateKey = `${year}-${month + 1}-${day}`;
 	try {
-		const response = await fetch(returnURL() + '/api/tasks/toggle', {
+		const response = await fetch(returnURL() + '/api/tasks/toggle/', {
 			method: 'POST',
 			credentials: 'include',
 			headers: {
