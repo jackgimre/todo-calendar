@@ -1,9 +1,12 @@
 import express from "express";
-import bcrypt from "bcrypt";
+import dotenv from 'dotenv';
 import User from "../models/User.js";
 import Authenticator from "../controllers/Authenticator.js";
 
+
 const router = express.Router();
+dotenv.config();
+const isProd = process.env.NODE_ENV === "production";
 
 /**
  * Signup route
@@ -33,9 +36,9 @@ router.post("/signup", async (req, res) => {
     // Set HTTP-only cookie
     res.cookie("token", token, {
         httpOnly: true,
-        sameSite: "lax",   // NOT "none" on HTTP
-        secure: false,     // must be false on localhost
-        maxAge: 24 * 60 * 60 * 1000
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,        // must be true on HTTPS (production)
+        maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.json({ user: { _id: user._id, username: user.username, email: user.email } });
@@ -49,25 +52,25 @@ router.post("/signup", async (req, res) => {
  * Login route
  */
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+    const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
-  if (!user) return res.status(401).json({ error: "Invalid email or password" });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ error: "Invalid email or password" });
 
-  const valid = await Authenticator.verifyPassword(password, user.passwordHash);
-  if (!valid) return res.status(401).json({ error: "Invalid email or password" });
+    const valid = await Authenticator.verifyPassword(password, user.passwordHash);
+    if (!valid) return res.status(401).json({ error: "Invalid email or password" });
 
-  const token = Authenticator.returnToken(user._id);
+    const token = Authenticator.returnToken(user._id);
 
-  // Cookie setup for localhost HTTP
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: false,       // must be false on localhost
-    sameSite: "lax",     // safe for localhost dev
-    maxAge: 24 * 60 * 60 * 1000
-  });
+    // Cookie setup for localhost HTTP
+    res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,        // must be true on HTTPS (production)
+        maxAge: 24 * 60 * 60 * 1000,
+    });
 
-  res.json({ user: { _id: user._id, username: user.username, email: user.email } });
+    res.json({ user: { _id: user._id, username: user.username, email: user.email } });
 });
 
 /**
