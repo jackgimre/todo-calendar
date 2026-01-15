@@ -1,8 +1,6 @@
 // src/utils/calendar.js
 import { returnURL } from "./proxy";
 
-const API_BASE = "/api/calendar";
-
 /**
  * Safely handle fetch responses
  */
