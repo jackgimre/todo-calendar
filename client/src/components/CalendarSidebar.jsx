@@ -39,7 +39,7 @@ const CalendarSidebar = ({ openModal, calendars, setPromptDeleteStatus, setDelet
                                             setPromptDeleteStatus(true);
                                             setDeletionId(item.id);
                                         }}
-                                        className="p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:text-blue-500 hover:scale-110"
+                                        className="p-1 sm:opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:text-blue-500 hover:scale-110"
                                     >
                                         <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
                                     </button>
