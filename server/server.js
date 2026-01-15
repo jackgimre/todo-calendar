@@ -1,57 +1,53 @@
-  import express from "express";
-  import morgan from "morgan";
-  import authRoutes from "./routes/auth.js";
-  import userRoutes from "./routes/user.js";
-  import calendarRoutes from "./routes/calendar.js";
-  import tasksRoutes from "./routes/tasks.js";
-  import dotenv from "dotenv";
-  import mongoose from "mongoose";
-  import cors from "cors";
-  import cookieParser from "cookie-parser";
+import express from 'express';
+import morgan from 'morgan';
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/user.js';
+import calendarRoutes from './routes/calendar.js';
+import tasksRoutes from './routes/tasks.js';
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
-  dotenv.config();
-  const app = express();
-  const allowedOrigins = [
-    "http://localhost:3000",
-    "https://todo-calendar-plum-kappa.vercel.app/"
-  ];
+dotenv.config();
+const app = express();
+const allowedOrigins = ['http://localhost:3000', 'https://todo-calendar-plum-kappa.vercel.app/'];
 
-app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `The CORS policy for this site does not allow access from the specified Origin.`;
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
-}));
+const allowedOrigin = process.env.FRONTEND_URL || 'https://your-frontend.vercel.app';
 
-  app.use(cookieParser());
-  app.use(express.json());
+app.use(
+	cors({
+		origin: allowedOrigin, // exact frontend URL
+		credentials: true, // allow cookies
+		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+		allowedHeaders: ['Content-Type', 'Authorization']
+	})
+);
 
-  app.use(morgan("dev"));
-  app.use(express.json());
+app.use(cookieParser());
+app.use(express.json());
 
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("MongoDB connected");
-  } catch (err) {
-    console.error("MongoDB connection error:", err);
-  }
+app.use(morgan('dev'));
+app.use(express.json());
 
-  app.use("/api/auth", authRoutes);
-  app.use("/api/user", userRoutes);
-  app.use("/api/calendar", calendarRoutes);
-  app.use("/api/tasks", tasksRoutes);
+try {
+	await mongoose.connect(process.env.MONGO_URI);
+	console.log('MongoDB connected');
+} catch (err) {
+	console.error('MongoDB connection error:', err);
+}
 
-  app.get("/api", (req, res) => {
-    res.json({ message: "API is working" });
-  });
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/tasks', tasksRoutes);
 
-  const PORT = process.env.PORT || 4000;
+app.get('/api', (req, res) => {
+	res.json({ message: 'API is working' });
+});
 
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+const PORT = process.env.PORT || 4000;
+
+app.listen(PORT, () => {
+	console.log(`Server is running on port ${PORT}`);
+});
