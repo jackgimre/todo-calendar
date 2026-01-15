@@ -12,43 +12,31 @@ import cookieParser from 'cookie-parser';
 dotenv.config();
 const app = express();
 
+// Allowed frontend origins
 const allowedOrigins = [process.env.CLIENT_URL, 'http://localhost:3000'];
 
-app.options(
-	/.*/,
-	cors({
-		origin: function (origin, callback) {
-			if (!origin) return callback(null, true);
-			if (allowedOrigins.includes(origin)) {
-				return callback(null, true);
-			}
-			callback(new Error('Not allowed by CORS'));
-		},
-		credentials: true,
-		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-		allowedHeaders: ['Content-Type', 'Authorization']
-	})
-);
+// CORS middleware
+const corsOptions = {
+	origin: function (origin, callback) {
+		if (!origin) return callback(null, true); // same-origin / server-to-server
+		if (allowedOrigins.includes(origin)) return callback(null, true);
+		callback(new Error('Not allowed by CORS'));
+	},
+	credentials: true,
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	allowedHeaders: ['Content-Type', 'Authorization']
+};
 
-app.use(
-	cors({
-		origin: function (origin, callback) {
-			if (!origin) return callback(null, true); // same-origin / non-browser
-			if (allowedOrigins.includes(origin)) {
-				return callback(null, true);
-			}
-			callback(new Error('Not allowed by CORS'));
-		},
-		credentials: true,
-		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-		allowedHeaders: ['Content-Type', 'Authorization']
-	})
-);
+app.use(cors(corsOptions));
+
+// Preflight OPTIONS requests (Safari cares)
+app.options('*', cors(corsOptions));
 
 app.use(cookieParser());
 app.use(express.json());
 app.use(morgan('dev'));
 
+// MongoDB connection
 try {
 	await mongoose.connect(process.env.MONGO_URI);
 	console.log('MongoDB connected');
@@ -56,6 +44,7 @@ try {
 	console.error('MongoDB connection error:', err);
 }
 
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/calendar', calendarRoutes);
@@ -65,8 +54,8 @@ app.get('/api', (req, res) => {
 	res.json({ message: 'API is working' });
 });
 
+// Start server
 const PORT = process.env.PORT || 4000;
-
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });
