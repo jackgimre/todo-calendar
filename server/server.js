@@ -15,24 +15,22 @@ const app = express();
 // Allowed frontend origins
 const allowedOrigins = [process.env.CLIENT_URL, 'http://localhost:3000'];
 
-// CORS middleware
+// CORS middleware (applied globally)
 const corsOptions = {
 	origin: function (origin, callback) {
-		if (!origin) return callback(null, true); // same-origin / server-to-server
+		if (!origin) return callback(null, true); // server-to-server or same-origin
 		if (allowedOrigins.includes(origin)) return callback(null, true);
 		callback(new Error('Not allowed by CORS'));
 	},
-	credentials: true,
+	credentials: true, // allows cookies
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 	allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-// CORS middleware
+// Apply CORS globally
 app.use(cors(corsOptions));
 
-// Preflight OPTIONS requests
-app.options('/*', cors(corsOptions));
-
+// Parse cookies & JSON
 app.use(cookieParser());
 app.use(express.json());
 app.use(morgan('dev'));
